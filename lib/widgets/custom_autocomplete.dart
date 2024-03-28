@@ -64,56 +64,87 @@ class _CustomAutocompleteState extends State<CustomAutocomplete> {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextField(
-          controller: _textEditingController,
-          decoration: InputDecoration(
-            hintText: 'Enter text',
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(3),
+            border: Border.all(
+              color: Colors.grey,
+              width: 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: 8.0,
+                runSpacing: 4.0,
+                children: _selectedItems
+                    .map(
+                      (selectedItem) => Chip(
+                    label: Text(selectedItem),
+                    onDeleted: () => _removeSelectedItem(selectedItem),
+                  ),
+                )
+                    .toList(),
+              ),
+              TextFormField(
+                controller: _textEditingController,
+                decoration: InputDecoration(
+                  enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          width: 0,
+                          color: Colors.white),
+                      borderRadius:
+                      BorderRadius.circular(3.0)),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        width: 0,
+                        color: Colors.white),
+                    borderRadius:
+                    BorderRadius.circular(3.0),
+                  ),
+                  hintText: 'Search',
+                  contentPadding: EdgeInsets.all(5),
+                  hintStyle: TextStyle(color: Colors.grey, fontFamily: 'Arial'),
+                  labelStyle: TextStyle(color: Colors.grey, fontFamily: 'Arial'),
+                  border: InputBorder.none,
+                ),
+              ),
+            ],
           ),
         ),
-        SizedBox(height: 10),
-        Wrap(
-          spacing: 8.0,
-          runSpacing: 4.0,
-          children: _selectedItems
-              .map(
-                (selectedItem) => Chip(
-              label: Text(selectedItem),
-              onDeleted: () => _removeSelectedItem(selectedItem),
-            ),
-          )
-              .toList(),
-        ),
-        SizedBox(height: 10),
         if (_filteredSuggestions.isNotEmpty)
           Container(
             height: 200, // Set the height of the suggestion list
-            child: ListView.builder(
-              itemCount: _filteredSuggestions.length,
-              itemBuilder: (context, index) {
-                final suggestion = _filteredSuggestions[index];
-                return InkWell(
-                  onTap: () => _onSuggestionSelected(suggestion),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.grey.shade300),
-                        ),
-                      ),
-                      child: ListTile(
-                        contentPadding: EdgeInsets.symmetric(vertical: 0.0),
-                        title: Text(
-                          suggestion,
-                          style: TextStyle(fontSize: 16),
+            child: Scrollbar(
+              thumbVisibility:true,
+              child: ListView.builder(
+                itemCount: _filteredSuggestions.length,
+                itemBuilder: (context, index) {
+                  final suggestion = _filteredSuggestions[index];
+                  return InkWell(
+                    onTap: () => _onSuggestionSelected(suggestion),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 0),
+                      child: Container(
+                        // decoration: BoxDecoration(
+                        //   border: Border(
+                        //     bottom: BorderSide(color: Colors.grey.shade300),
+                        //   ),
+                        // ),
+                        child: ListTile(
+                          contentPadding: EdgeInsets.symmetric(vertical: 0.0),
+                          title: Text(
+                            suggestion,
+                            style: TextStyle(fontSize: 16),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
         if (_filteredSuggestions.isEmpty && _textEditingController.text.isNotEmpty)
