@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 class CustomAutocomplete extends StatefulWidget {
   final List<String> suggestions;
-  final Function(List<String>) onSelected;
-  List<String> selectedItems = [];
+  final ValueChanged<List<String>> onSelected;
 
-  CustomAutocomplete({required this.suggestions, required this.onSelected});
+  CustomAutocomplete({
+    required this.suggestions,
+    required this.onSelected,
+  });
 
   @override
   _CustomAutocompleteState createState() => _CustomAutocompleteState();
@@ -13,13 +15,14 @@ class CustomAutocomplete extends StatefulWidget {
 
 class _CustomAutocompleteState extends State<CustomAutocomplete> {
   late TextEditingController _textEditingController;
-  List<String> filteredSuggestions = [];
+  List<String> _selectedItems = [];
+  List<String> _filteredSuggestions = [];
 
   @override
   void initState() {
     super.initState();
     _textEditingController = TextEditingController();
-    filteredSuggestions = widget.suggestions;
+    _textEditingController.addListener(_onTextChanged);
   }
 
   @override
@@ -28,62 +31,100 @@ class _CustomAutocompleteState extends State<CustomAutocomplete> {
     super.dispose();
   }
 
+  void _onTextChanged() {
+    final inputText = _textEditingController.text.toLowerCase();
+    setState(() {
+      if (inputText.isNotEmpty) {
+        _filteredSuggestions = widget.suggestions
+            .where((suggestion) => suggestion.toLowerCase().contains(inputText))
+            .toList();
+      } else {
+        _filteredSuggestions = [];
+      }
+    });
+  }
+
+  void _onSuggestionSelected(String suggestion) {
+    // Check if the suggestion is already in _selectedItems
+    if (!_selectedItems.contains(suggestion)) {
+      setState(() {
+        _selectedItems.add(suggestion);
+        widget.onSelected(_selectedItems.toList());
+      });
+    }
+  }
+
+  void _removeSelectedItem(String selectedItem) {
+    setState(() {
+      _selectedItems.remove(selectedItem);
+      widget.onSelected(_selectedItems.toList());
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextField(
           controller: _textEditingController,
-          onChanged: onTextChanged,
           decoration: InputDecoration(
-            hintText: 'Search',
-            contentPadding: EdgeInsets.all(10.0),
-            border: OutlineInputBorder(),
+            hintText: 'Enter text',
           ),
         ),
-        if (_textEditingController.text.length >= 3 && filteredSuggestions.isNotEmpty)
+        SizedBox(height: 10),
+        Wrap(
+          spacing: 8.0,
+          runSpacing: 4.0,
+          children: _selectedItems
+              .map(
+                (selectedItem) => Chip(
+              label: Text(selectedItem),
+              onDeleted: () => _removeSelectedItem(selectedItem),
+            ),
+          )
+              .toList(),
+        ),
+        SizedBox(height: 10),
+        if (_filteredSuggestions.isNotEmpty)
           Container(
-            height: 200, // Set a fixed height for the suggestions list
+            height: 200, // Set the height of the suggestion list
             child: ListView.builder(
-              itemCount: filteredSuggestions.length,
-              itemBuilder: (BuildContext context, int index) {
-                final suggestion = filteredSuggestions[index];
-                final isSelected = widget.selectedItems.contains(suggestion);
-
-                return ListTile(
-                  title: Text(suggestion),
-                  onTap: () {
-                    setState(() {
-                      if (isSelected) {
-                        widget.selectedItems.remove(suggestion);
-                      } else {
-                        widget.selectedItems.add(suggestion);
-                      }
-                    });
-                    widget.onSelected(widget.selectedItems);
-                    print("Selected items : ${widget.selectedItems}");
-                  },
-                  selected: isSelected,
-                  tileColor: isSelected ? Colors.blue.withOpacity(0.2) : null,
+              itemCount: _filteredSuggestions.length,
+              itemBuilder: (context, index) {
+                final suggestion = _filteredSuggestions[index];
+                return InkWell(
+                  onTap: () => _onSuggestionSelected(suggestion),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(color: Colors.grey.shade300),
+                        ),
+                      ),
+                      child: ListTile(
+                        contentPadding: EdgeInsets.symmetric(vertical: 0.0),
+                        title: Text(
+                          suggestion,
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ),
                 );
               },
             ),
           ),
+        if (_filteredSuggestions.isEmpty && _textEditingController.text.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            child: Text(
+              'Item not found',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ),
       ],
     );
-  }
-
-  void onTextChanged(String value) {
-    setState(() {
-      if (value.length >= 3) {
-        filteredSuggestions = widget.suggestions
-            .where((suggestion) =>
-            suggestion.toLowerCase().contains(value.toLowerCase()))
-            .toList();
-      } else {
-        filteredSuggestions = widget.suggestions;
-      }
-    });
   }
 }

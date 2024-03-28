@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:autocomplete_func/widgets/custom_autocomplete.dart';
 
-class GetXHomePage extends StatelessWidget {
+class HomePage extends StatelessWidget {
   final List<String> suggestions = [
     'Apple',
     'Banana',
@@ -11,17 +11,20 @@ class GetXHomePage extends StatelessWidget {
     'Strawberry',
   ];
 
+  final TextEditingController textEditingController = TextEditingController();
+
   final RxList<String> selectedValues = <String>[].obs;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Getx Home Page'),
+        title: Text('Home Page'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: SingleChildScrollView(
+      body: SingleChildScrollView(
+        scrollDirection: Axis.vertical,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
